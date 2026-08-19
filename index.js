@@ -1,15 +1,19 @@
 require("dotenv").config();
-console.log("My Database URL is:", process.env.DATABASE_URL);
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const openapi = require("./openapi.json");
 const app = express();
-const port = 3000;
+const { Pool } = require("pg");
+const { createClient } = require("@supabase/supabase-js");
 
 app.use(express.json());
+const port = process.env.PORT || 3000;
 
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
 
-const { Pool } = require("pg");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -48,7 +52,7 @@ function rowToTask(row) {
   return {
     id: row.id,
     title: row.title,
-    done: Boolean(row.done), // converts 0 -> false, 1 -> true
+    done: Boolean(row.done), 
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

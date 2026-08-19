@@ -1,7 +1,7 @@
 {
   "name": "a1--crud-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "```markdown\r # Task Management API — Containerized Stack",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,9 +11,18 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pg": "^8.23.0",
     "swagger-ui-express": "^5.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Devcarlj/auth-login-protect.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Devcarlj/auth-login-protect/issues"
+  },
+  "homepage": "https://github.com/Devcarlj/auth-login-protect#readme"
 }
