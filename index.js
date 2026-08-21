@@ -90,6 +90,26 @@ app.post("/auth/login", async (req, res) => {
   });
 });
 
+// GET /public/info
+app.get("/public/info", (req, res) => {
+  res.status(200).json({ message: "Welcome stranger! This info is public." });
+});
+
+// GET /protected/profile (Stage 2 unverified version)
+app.get("/protected/profile", (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Access token required" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ error: "Access token required" });
+  }
+
+  res.status(200).json({ message: "Token presented, unverified." });
+});
+
 // GET /tasks - Supports ?search=milk, ?done=true/false, and ?sort=title
 app.get("/tasks", async (req, res) => {
   const { search, done, sort } = req.query;
