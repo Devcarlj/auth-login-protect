@@ -1,9 +1,9 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Task API",
+    "title": "Task API with Auth",
     "version": "1.0",
-    "description": "In-memory CRUD API for tasks."
+    "description": "Task management API with Supabase Authentication."
   },
   "servers": [
     {
@@ -11,6 +11,87 @@
     }
   ],
   "paths": {
+    "/auth/signup": {
+      "post": {
+        "summary": "User Signup",
+        "operationId": "signupUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "test@example.com" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Bad request" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "test@example.com" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, returns JWT access token" },
+          "401": { "description": "Invalid login credentials" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Log out user",
+        "operationId": "logoutUser",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "204": { "description": "No Content - Successfully logged out" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/protected/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "operationId": "getProfile",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Returns authenticated user details" },
+          "401": { "description": "Unauthorized / Invalid token" }
+        }
+      }
+    },
+    "/public/info": {
+      "get": {
+        "summary": "Public Info",
+        "operationId": "getPublicInfo",
+        "responses": {
+          "200": { "description": "Public welcome message" }
+        }
+      }
+    },
     "/tasks": {
       "get": {
         "summary": "List tasks",
@@ -20,18 +101,19 @@
             "name": "done",
             "in": "query",
             "description": "Filter by completion status",
-            "schema": {
-              "type": "boolean"
-            }
+            "schema": { "type": "boolean" }
           },
           {
             "name": "search",
             "in": "query",
             "description": "Filter tasks whose title contains this word",
-            "schema": {
-              "type": "string",
-              "example": "milk"
-            }
+            "schema": { "type": "string", "example": "milk" }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort tasks by title or ID",
+            "schema": { "type": "string", "example": "title" }
           }
         ],
         "responses": {
@@ -41,19 +123,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Task"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid query parameter",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
+                  "items": { "$ref": "#/components/schemas/Task" }
                 }
               }
             }
@@ -67,9 +137,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTaskRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateTaskRequest" }
             }
           }
         },
@@ -78,9 +146,7 @@
             "description": "Task created",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
+                "schema": { "$ref": "#/components/schemas/Task" }
               }
             }
           },
@@ -88,12 +154,7 @@
             "description": "Invalid request body",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "title is required and cannot be empty"
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -107,10 +168,7 @@
           "in": "path",
           "required": true,
           "description": "Task id",
-          "schema": {
-            "type": "integer",
-            "example": 1
-          }
+          "schema": { "type": "integer", "example": 1 }
         }
       ],
       "get": {
@@ -121,9 +179,7 @@
             "description": "Task found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
+                "schema": { "$ref": "#/components/schemas/Task" }
               }
             }
           },
@@ -131,12 +187,7 @@
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "Task 99 not found"
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -149,9 +200,7 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTaskRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateTaskRequest" }
             }
           }
         },
@@ -160,36 +209,7 @@
             "description": "Task updated",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request body",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "examples": {
-                  "emptyBody": {
-                    "value": {
-                      "error": "request body must include title and/or done"
-                    }
-                  },
-                  "emptyTitle": {
-                    "value": {
-                      "error": "title cannot be empty"
-                    }
-                  },
-                  "invalidDone": {
-                    "value": {
-                      "error": "done must be a boolean"
-                    }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/Task" }
               }
             }
           },
@@ -197,12 +217,7 @@
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "Task 99 not found"
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -212,19 +227,12 @@
         "summary": "Delete a task",
         "operationId": "deleteTask",
         "responses": {
-          "204": {
-            "description": "Task deleted"
-          },
+          "204": { "description": "Task deleted" },
           "404": {
             "description": "Task not found",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "Task 99 not found"
-                }
+                "schema": { "$ref": "#/components/schemas/Error" }
               }
             }
           }
@@ -240,9 +248,7 @@
             "description": "Aggregate task statistics",
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Stats"
-                }
+                "schema": { "$ref": "#/components/schemas/Stats" }
               }
             }
           }
@@ -260,9 +266,7 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Task"
-                  }
+                  "items": { "$ref": "#/components/schemas/Task" }
                 }
               }
             }
@@ -272,74 +276,54 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "Task": {
         "type": "object",
         "required": ["id", "title", "done"],
         "properties": {
-          "id": {
-            "type": "integer",
-            "example": 1
-          },
-          "title": {
-            "type": "string",
-            "example": "Buy groceries"
-          },
-          "done": {
-            "type": "boolean",
-            "example": false
-          }
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "Buy groceries" },
+          "done": { "type": "boolean", "example": false },
+          "created_at": { "type": "string", "example": "2026-03-20 12:00:00" },
+          "updated_at": { "type": "string", "example": "2026-03-20 12:00:00" }
         }
       },
       "CreateTaskRequest": {
         "type": "object",
         "required": ["title"],
         "properties": {
-          "title": {
-            "type": "string",
-            "example": "Buy milk"
-          }
+          "title": { "type": "string", "example": "Buy milk" }
         }
       },
       "UpdateTaskRequest": {
         "type": "object",
         "minProperties": 1,
         "properties": {
-          "title": {
-            "type": "string",
-            "example": "Buy oat milk"
-          },
-          "done": {
-            "type": "boolean",
-            "example": true
-          }
+          "title": { "type": "string", "example": "Buy oat milk" },
+          "done": { "type": "boolean", "example": true }
         }
       },
       "Error": {
         "type": "object",
         "required": ["error"],
         "properties": {
-          "error": {
-            "type": "string"
-          }
+          "error": { "type": "string" }
         }
       },
       "Stats": {
         "type": "object",
-        "required": ["total", "done", "open"],
+        "required": ["totalTasks", "completedTasks", "pendingTasks"],
         "properties": {
-          "total": {
-            "type": "integer",
-            "example": 7
-          },
-          "done": {
-            "type": "integer",
-            "example": 3
-          },
-          "open": {
-            "type": "integer",
-            "example": 4
-          }
+          "totalTasks": { "type": "integer", "example": 7 },
+          "completedTasks": { "type": "integer", "example": 3 },
+          "pendingTasks": { "type": "integer", "example": 4 }
         }
       }
     }
