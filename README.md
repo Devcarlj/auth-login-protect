@@ -1,47 +1,40 @@
 
+# Task Management API · Auth & Protected Routes
 
-# `README.md`
-
-```markdown
-# Task Management API — Containerized Stack
-
-[cite_start]A persistent, containerized REST API built with **Node.js / Express** and **PostgreSQL**, fully containerized using **Docker** and **Docker Compose**[cite: 1179].
+A secure, containerized REST API built with **Node.js / Express**, **PostgreSQL**, and **Supabase Auth**, orchestrated using **Docker Compose**.
 
 ---
 
 ## 🚀 Quick Start (One-Command Setup)
 
-[cite_start]You can launch the entire stack (API server + PostgreSQL database) with a single command[cite: 1205].
+Launch the entire stack (API server + PostgreSQL database) with a single command.
 
 ### Prerequisites
-* [cite_start][Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running[cite: 1205].
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 * Git installed.
 
 ### Instructions
 
 1. **Clone the repository:**
-   ```bash
+```bash
    git clone <YOUR_GITHUB_REPO_URL>
    cd <YOUR_REPO_FOLDER>
 
 ```
 
 2. **Set up Environment Variables:**
-Copy the example environment file to create your `.env` file:
-
-
+Copy the example environment file to create your local `.env` file:
 ```bash
 cp .env.example .env
 
 ```
 
 
+Open `.env` and fill in your Supabase credentials (`SUPABASE_URL` and `SUPABASE_KEY`) alongside your Postgres configuration.
 3. **Start the Stack:**
 Run the application using Docker Compose:
-
-
 ```bash
-docker compose up --build -d
+docker compose up --build
 
 ```
 
@@ -63,39 +56,37 @@ docker compose down
 
 ## 🔑 Environment Variables
 
-The application reads configuration settings from the `.env` file. Below are the default values configured in `.env.example`:
+The application reads configuration settings from the `.env` file. Below are the variables configured in `.env.example`:
 
-| Variable | Description | Default Value |
+| Variable | Description | Example / Default |
 | --- | --- | --- |
 | `PORT` | Port the Express API server listens on | `3000` |
-| `DB_HOST` | Database host service name in Docker | `db` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_NAME` | Database name | `tasks` |
-| `DB_USER` | Database superuser username | `postgres` |
-| `DB_PASSWORD` | Database user password | `dev` |
+| `DATABASE_URL` | Connection string for PostgreSQL container | `postgres://postgres:dev@db:5432/tasks` |
+| `SUPABASE_URL` | Supabase Project URL (Base URL) | `https://your-project.supabase.co` |
+| `SUPABASE_KEY` | Supabase Public Anon API Key | `eyJhbGciOiJIUzI1NiIsIn...` |
 
 ---
 
-## 📚 API Endpoints
+## 📚 API Reference Table
 
-| Method | Endpoint | Description | Success Code |
-| --- | --- | --- | --- |
-| `GET` | `/` | API status health check | `200 OK` |
-| `GET` | `/tasks` | Fetch all tasks | `200 OK` |
-| `GET` | `/tasks/:id` | Fetch a single task by ID | `200 OK` |
-| `POST` | `/tasks` | Create a new task (`title` required) | `201 Created` |
-| `PUT` | `/tasks/:id` | Update an existing task (`title`, `done`) | `200 OK` |
-| `DELETE` | `/tasks/:id` | Delete a task by ID | `204 No Content` |
-| `GET` | `/docs` | Interactive Swagger API documentation | `200 OK` |
+| Endpoint | Method | Auth Required | Description | Success Status |
+| --- | --- | --- | --- | --- |
+| `/public/info` | GET | No | Public unauthenticated lobby info | 200 OK |
+| `/auth/signup` | POST | No | Register a new user with email & password | 201 Created |
+| `/auth/login` | POST | No | Authenticate user & return JWT tokens | 200 OK |
+| `/auth/logout` | POST | Yes (`Bearer`) | Terminate current user session | 204 No Content |
+| `/protected/profile` | GET | Yes (`Bearer`) | Retrieve authenticated user metadata | 200 OK |
+| `/protected/dashboard` | GET | Yes (`Bearer`) | Access secure user dashboard | 200 OK |
+
 
 ---
 
 ## 🧪 Sample Request (`curl`)
 
-Here is an example `curl` request to verify the API server with headers and response status output:
+Here is an example `curl` command testing the public info endpoint:
 
 ```bash
-curl -i http://localhost:3000/tasks
+curl -i http://localhost:3000/public/info
 
 ```
 
@@ -105,68 +96,48 @@ curl -i http://localhost:3000/tasks
 HTTP/1.1 200 OK
 X-Powered-By: Express
 Content-Type: application/json; charset=utf-8
-Content-Length: 104
-Date: Thu, 13 Aug 2026 21:00:00 GMT
+Content-Length: 48
+Date: Fri, 21 Aug 2026 18:00:00 GMT
 Connection: keep-alive
 
-[
-  {
-    "id": 1,
-    "title": "Buy groceries",
-    "done": false,
-    "created_at": "2026-08-13T04:59:20.176Z",
-    "updated_at": "2026-08-13T04:59:20.176Z"
-  },
-  {
-    "id": 2,
-    "title": "Learn Postgres",
-    "done": false,
-    "created_at": "2026-08-13T04:59:20.176Z",
-    "updated_at": "2026-08-13T04:59:20.176Z"
-  },
-  {
-    "id": 3,
-    "title": "Complete assignment",
-    "done": false,
-    "created_at": "2026-08-13T04:59:20.176Z",
-    "updated_at": "2026-08-13T04:59:20.176Z"
-  }
+{"message":"Welcome stranger! This info is public."}
 
 ```
 
 ---
 
-## 💾 Database Verification & Persistence
+## 🔒 Understanding 401 Unauthorized vs. 403 Forbidden
 
-### Screenshots
+Access control is split distinctly into identity and permissions:
 
-<img width="1919" height="1018" alt="Screenshot 2026-08-13 214013" src="https://github.com/user-attachments/assets/772dcbda-5d0b-4c61-bf10-900696188354" />
-
-
----
-
-## 🛠️ Architecture & Technologies Used
-
-* **Node.js & Express**: Web framework handling backend logic, input validation, and REST API routing.
-* 
-**PostgreSQL**: Relational database engine running in a separate Docker container.
-
-
-* 
-**Docker & Docker Compose**: Containerization tool managing multi-container service orchestration.
-
-
-* **pg (node-postgres)**: PostgreSQL client driver for Node.js utilizing parameterized SQL queries to prevent SQL injection.
-
-```
+* **`401 Unauthorized` ("I don't know who you are")**: Triggered when a client hits a protected route without providing a valid Bearer token, or when the token is missing, expired, or tampered with.
+* **`403 Forbidden` ("I know who you are, but you aren't allowed here")**: Triggered when a request comes from a fully authenticated, verified user who lacks the specific administrative roles or permissions required to view the requested resource.
 
 ---
 
-### [cite_start]Key Requirements Checklist Covered in this README[cite: 1205]:
-1. [cite_start]**One command startup instructions** (`docker compose up`)[cite: 1205].
-2. [cite_start]**Environment instructions** pointing at `.env.example`[cite: 1205].
-3. [cite_start]**Table of all API endpoints**[cite: 1205].
-4. [cite_start]**Pasted `curl -i` example** showing HTTP headers and JSON output[cite: 1205].
-5. [cite_start]**Database verification screenshot section**[cite: 1205].
+## 💾 Swagger UI & Authentication Flow
 
-```
+Swagger UI is served at `/docs`. Once authorized via the green **Authorize** padlock button using a JWT `access_token` from `/auth/login`, you can test all endpoints directly in the browser.
+
+### Swagger UI Documentation Screenshot
+<img width="1907" height="864" alt="image" src="https://github.com/user-attachments/assets/0501e3a2-4c1d-43ea-8692-1b302da44815" />
+
+
+Below is the interactive documentation showing each auth-related endpoint:
+
+#### Auth Endpoints Breakdown in Swagger UI:
+
+1. **User Signup (`POST /auth/signup`)**: Registers a new user account with email and password parameters.
+<img width="1452" height="787" alt="image" src="https://github.com/user-attachments/assets/037faf3b-3b71-4a69-9f49-e54452125ef1" />
+
+2. **User Login (`POST /auth/login`)**: Authenticates credentials and returns session tokens (`access_token` and `refresh_token`).
+<img width="1449" height="705" alt="image" src="https://github.com/user-attachments/assets/3e6fa822-7179-4496-8f1c-6ae8180515f9" />
+
+3. **Public Info (`GET /public/info`)**:
+<img width="1791" height="902" alt="image" src="https://github.com/user-attachments/assets/2a18c2f9-db7b-4048-8e5a-0fe37aa1d465" />
+
+4. **Get User Profile (`GET /protected/profile`)**: Protected endpoint requiring a Bearer token to inspect account metadata.
+<img width="1441" height="760" alt="image" src="https://github.com/user-attachments/assets/b66f07ea-0708-4281-8a19-1b6c1ee03024" />
+
+5. **Log Out (`POST /auth/logout`)**: Protected endpoint that terminates the current user session.
+<img width="1483" height="852" alt="image" src="https://github.com/user-attachments/assets/68febeb5-f54e-4ce7-8e63-282dd5e24289" />
